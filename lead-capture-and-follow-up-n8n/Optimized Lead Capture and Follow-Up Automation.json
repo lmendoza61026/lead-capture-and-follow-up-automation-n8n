@@ -1,0 +1,669 @@
+{
+  "name": "Optimized Lead Capture and Follow-Up Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Property Inquiry Form",
+        "formDescription": "Ask about your Dream Home now!",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "First Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Last Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contact Number",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Property you're interested",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "fb040325-154a-41d6-affa",
+      "name": "Inquiry Form",
+      "webhookId": "c05f85d5-4e77-4bc3-950"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f64a2141-51a1-cd537e630a",
+              "leftValue": "={{ $json.isValidLead }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        -96
+      ],
+      "id": "a874ec0fc16205c5ee87",
+      "name": "Is the Data Valid?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1C5QOwemQIZ5SMTF2mC4M",
+          "mode": "list",
+          "cachedResultName": "CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 170290,
+          "mode": "list",
+          "cachedResultName": "Junk Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M/edit#gid=1547570290"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Junk Leads"
+          ],
+          "schema": [
+            {
+              "id": "Junk Leads",
+              "displayName": "Junk Leads",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        0
+      ],
+      "id": "7602e3df6e0c30d",
+      "name": "Dead Leads",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f6a4a09dae6894888d",
+              "leftValue": "={{ $json['Property Notes'] }}",
+              "rightValue": ".*(Condo|House and Lot|Pre Selling).*",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        -192
+      ],
+      "id": "c115a2099e0f6c3",
+      "name": "Hot Lead?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Draft the real estate follow-up email based on the system instructions.",
+        "options": {
+          "systemMessage": "=You are an expert real estate coordinator. Draft a professional, warm email to a prospective buyer.\n\nINCOMING LEAD INFO:\n- Lead First Name: {{ $json['First Name'] }}\n- Property Name: {{ $json['Property Notes'] }}\n\nOUTPUT FORMAT RULES:\n1. Start writing the email copy IMMEDIATELY. Never include conversational intros like \"Here is the draft email:\" or \"Here is the personalized response:\". \n2. Under no circumstances write placeholder tags like \"[Property Name]\" or brackets. Replace them explicitly with the value provided under INCOMING LEAD INFO above.\n3. Open with: \"Dear {{ $json['First Name'] }},\"\n4. Thank them for their interest in the {{ $json['Property Notes'] }}.\n5. Conclude the email strictly with:\nBest regards,\nReal Estate Team\n\nCRITICAL: Output ONLY the body of the email starting directly with 'Dear [Name],'. Do NOT include introductory phrases like 'Here's the email:' and do NOT use bracketed placeholders."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1472,
+        -96
+      ],
+      "id": "6fae7b73a911",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        80
+      ],
+      "id": "d590415f92",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "lmendoza61026@gmail.com",
+        "subject": "=🚨 Hot Property Lead: {{ $json['Full Name'] }}",
+        "message": "=Hi Team,<br><br>\n\nWe just received a high-value property inquiry that requires immediate attention! Please review the lead details below and assign an agent to follow up within the hour:<br><br>\n\n📋 <strong>LEAD PROFILE:</strong><br>\n• <strong>Full Name:</strong>{{ $json['Full Name'] }} <br>\n• <strong>Email:</strong>{{ $json.Email }} <br>\n• <strong>Phone Number:</strong>{{ $json['Phone Number'] }} <br><br>\n\n🏡 <strong>PROPERTY INTEREST:</strong><br>\n• <strong>Details provided:</strong>{{ $json['Property Notes'] }} <br><br>\n\nPlease make sure to log all initial call updates directly under this client's profile in our Google Sheet CRM.<br><br>\n\nBest regards,<br>\nLead Automation System\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        -208
+      ],
+      "id": "e9b352faa",
+      "name": "Team Notification",
+      "webhookId": "3163cf5f65",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -528
+      ],
+      "id": "0e008",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Hot Lead?').item.json.Email }}",
+        "subject": "=Next steps for your {{ $('Hot Lead?').item.json['Property Notes'] }} inquiry!",
+        "message": "={{ $json.output\n  .replace(/^(Here's|Here is)[^\\n]*:\\s*/i, '')\n  .replace(/\\[Lead First Name\\]|\\[First Name\\]/gi, $('Hot Lead?').item.json['First Name'].trim())\n  .replace(/\\[Property Name\\]/gi, $('Hot Lead?').item.json['Property Notes'].trim())\n  .trim()\n  .replace(/\\n/g, '<br>') \n}}\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        -208
+      ],
+      "id": "293c18976",
+      "name": "Lead Follow-Up",
+      "webhookId": "62e2395098b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aF",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1C5XIwF6IeGwemQIZ5SMTF2mC4M",
+          "mode": "list",
+          "cachedResultName": "CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 520,
+          "mode": "list",
+          "cachedResultName": "Master Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M/edit#gid=516079520"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "First Name": "={{ $('Is the Data Valid?').item.json.formattedFirstName }}",
+            "Last Name": "={{ $('Is the Data Valid?').item.json.formattedLastName }}",
+            "Full Name": "={{ $('Is the Data Valid?').item.json.formattedFullName }}",
+            "Phone Number": "={{ $('Is the Data Valid?').item.json.transformedPhone }}",
+            "Property Notes": "={{ $('Is the Data Valid?').item.json.sanitizedPropertyNotes }}",
+            "Lead Status": "={{ $('Lead Status').item.json.row_number ? 'Existing Client' : 'New Lead' }}\n",
+            "Email": "={{ $('Validate and Format Data').item.json.transformedEmail }}\n"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Property Notes",
+              "displayName": "Property Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Status",
+              "displayName": "Lead Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        -192
+      ],
+      "id": "731da9936b",
+      "name": "Upsert Master Lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M",
+          "mode": "list",
+          "cachedResultName": "CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 516079520,
+          "mode": "list",
+          "cachedResultName": "Master Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C5XIwF6IeGSVIOPGpH9W12JRJQOwemQIZ5SMTF2mC4M/edit#gid=516079520"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Validate and Format Data').item.json.transformedEmail }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        -192
+      ],
+      "id": "ce965370",
+      "name": "Lead Status",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Safe extraction with strict string casting fallbacks\nlet firstName = String($json[\"First Name\"] || '').trim();\nlet lastName = String($json[\"Last Name\"] || '').trim();\nlet email = String($json[\"Email\"] || '').trim().toLowerCase();\n\n// Coerces number values safely to text before running trim\nlet rawPhone = ($json[\"Contact Number\"] !== undefined && $json[\"Contact Number\"] !== null) ? $json[\"Contact Number\"].toString().trim() : '';\nlet propertyInterest = String($json[\"Property you're interested\"] || '').trim();\n\n// 2. Proper Case Formatter\nconst toProperCase = (str) => {\n  return str.toLowerCase().replace(/\\b\\w/g, c => c.toUpperCase());\n};\n\nfirstName = toProperCase(firstName);\nlastName = toProperCase(lastName);\nlet fullName = `${firstName} ${lastName}`;\n\n// 3. Normalize Phone Numbers\nlet cleanPhone = rawPhone.replace(/[-() ]/g, '');\nif (cleanPhone.startsWith('0')) {\n  cleanPhone = '+63' + cleanPhone.slice(1);\n} else if (cleanPhone.startsWith('63') && !cleanPhone.startsWith('+')) {\n  cleanPhone = '+' + cleanPhone;\n}\n\n// 4. Structural Checks\nconst isEmailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\nconst hasRequiredFields = firstName.length > 0 && lastName.length > 0 && isEmailValid;\n\n// 5. Output\nreturn {\n  ...$json,\n  formattedFirstName: firstName,\n  formattedLastName: lastName,\n  formattedFullName: fullName,\n  transformedEmail: email,\n  transformedPhone: cleanPhone || 'Not Provided',\n  sanitizedPropertyNotes: propertyInterest || 'No specific property listed',\n  isValidLead: hasRequiredFields\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -96
+      ],
+      "id": "fc1098219b8056",
+      "name": "Validate and Format Data"
+    },
+    {
+      "parameters": {
+        "content": "This node automatically triggers and send an error email message to a team member to notify them if this workflow fails or have and issue.",
+        "height": 288,
+        "width": 480,
+        "color": "#972020"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -624
+      ],
+      "id": "93ef310fa2e51fb341",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "1st Phase: Capture/gathers data. Validate and format data then checks if the lead is valid or not\n",
+        "height": 352,
+        "width": 592,
+        "color": "#1D4E1E"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -224
+      ],
+      "id": "0992a395ea5b6c67",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "2nd Phase: If the lead is valid it automatically check the status if its existing or new lead then updates or insert the data to the Master Lead Sheet. It then qualifies if it is a hot lead or not. If the data is not valid it will go thru the false branch and insert the data to the Dead Leads Sheet",
+        "height": 592,
+        "width": 544,
+        "color": "#0B2665"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -400
+      ],
+      "id": "8a656b9",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "sendTo": "lmendoza61026@gmail.com",
+        "subject": "Error",
+        "message": "=⚠️ n8n Real Estate Workflow Execution Failed!  - Execution ID: {{ $json.execution.id }} - Error Node: {{ $json.execution.error.node.name }} - Error Details: {{ $json.execution.error.message }}  Action Required: Open your n8n panel, search the Execution logs using the ID above, and manually recover the lead data to follow up.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -528
+      ],
+      "id": "12fa68b1eb942670e0",
+      "name": "Error Notification Alert",
+      "webhookId": "502361bad63114",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Team members will receive an email notification for every hot leads. Hot lead or not, the AI agent will send a follow up email for all the inquiries.",
+        "height": 672,
+        "width": 608,
+        "color": "#09584F"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -416
+      ],
+      "id": "0f5204ad-6dec-4807-97ab-a84e0ecf26f2",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Inquiry Form": {
+      "main": [
+        [
+          {
+            "node": "Validate and Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is the Data Valid?": {
+      "main": [
+        [
+          {
+            "node": "Lead Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dead Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Lead?": {
+      "main": [
+        [
+          {
+            "node": "Team Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Team Notification": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Lead Follow-Up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Notification Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Master Lead": {
+      "main": [
+        [
+          {
+            "node": "Hot Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Status": {
+      "main": [
+        [
+          {
+            "node": "Upsert Master Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and Format Data": {
+      "main": [
+        [
+          {
+            "node": "Is the Data Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "JMz753vtgCJkd3sT",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "559cae7f-93f2-4c86-88ee-5993234dfd58",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fb0e3da93fdf98b4b2b8bb7ee92729707d4b5b9937ed190eb0a7d7b2106db610"
+  },
+  "nodeGroups": [],
+  "id": "3z5HdFaPW6hfFNqV",
+  "tags": []
+}
