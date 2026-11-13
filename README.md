@@ -1,4 +1,3 @@
-# lead-capture-and-follow-up-automation-n8n
 # Lead Capture and Automated Follow-Up System
 
 ## Overview
